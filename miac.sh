@@ -10,16 +10,13 @@
 REPOLOC="/Users/Shared/"
 REPONAME="munki_repo"
 REPODIR="${REPOLOC}/${REPONAME}"
-LOGGER="/usr/bin/logger -t Munki-in-a-Box"
+LOGGER="/usr/bin/logger -t Munki-in-a-Cloud"
 MUNKILOC="/usr/local/munki"
-WEBROOT="/Users/Shared/munki_repo"
-PHPROOT="/Library/Server/Web/Config/php"
 GIT="/usr/bin/git"
 MANU="/usr/local/munki/manifestutil"
 TEXTEDITOR="TextWrangler.app"
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
-webstatus=$(serveradmin status web | awk '{print $3}') # Thanks Charles Edge
-AUTOPKGRUN="AdobeFlashPlayer.munki AdobeReader.munki Dropbox.munki Firefox.munki GoogleChrome.munki OracleJava7.munki TextWrangler.munki munkitools2.munki MakeCatalogs.munki"
+AUTOPKGRUN="AdobeFlashPlayer.munki Dropbox.munki Firefox.munki GoogleChrome.munki BBEdit.munki munkitools3.munki MakeCatalogs.munki"
 AUTOPKGARRAY=($AUTOPKGRUN)
 DEFAULTS="/usr/bin/defaults"
 AUTOPKG="/usr/local/bin/autopkg"
@@ -40,12 +37,6 @@ DOMAIN="your.domainname.tld" # This should be one you can actually control...
 
 ## Couple Checks first:
 
-####
-
-# Checks
-
-####
-
 echo "First up: Are you an admin user? Enter your password below:"
 
 #Let's see if this works...
@@ -60,7 +51,7 @@ if
 	exit 6 "You are not an admin user, you need to do this an admin user."
 fi
 
-${LOGGER} "Starting up..."
+${LOGGER} "Starting up Munki in a Cloud..."
 
 
 ${LOGGER} "Starting checks..."
@@ -323,9 +314,6 @@ ${AWS} cloudfront create-distribution --origin-domain-name ${DOMAIN}
 
 ## Configure the CloudFront Distribution
 
+## This is the part I can't figure out. Creating the cloudfront distro works! But I haven't figure out how to generate the JSON I need in a ways that makes sense to script. Halp.
 
 ## Get a beer and go to the pub.
-
-
-
-exit

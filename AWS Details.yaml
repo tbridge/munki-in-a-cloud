@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Munki in a CloudFront distribution with custom domain.
+
+Parameters:
+
+  CloudFrontOriginAccessIdentity:
+    Type: String
+    Description: The CloudFront origin access identity to grant access to the bucket.
+
+  CertificateId:
+    Type: String
+    Description: The UUID for the certificate to use for the custom domain.
+  
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: The ID of hosted zone for the Route53 record.
+
+  DomainName:
+    Type: String
+    Description: The custom domain name for the CloudFront distribution.
+
+Resources:
+
+  MyBucket:
+    Type: "AWS::S3::Bucket"
+  
+  MyBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref MyBucket
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject*'
+            Effect: Allow
+            Resource: !Sub 'arn:aws:s3:::${MyBucket}/*'
+            Principal:
+              AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}'
+  
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+
+        Aliases:
+          - !Ref DomainName
+
+        ViewerCertificate:
+          AcmCertificateArn: !Sub 'arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${CertificateId}'
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.1_2016
+
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: MyBucketOrigin
+          ViewerProtocolPolicy: https-only
+
+        Origins:
+          - DomainName: !GetAtt MyBucket.DomainName
+            Id: MyBucketOrigin
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
+
+  CloudFrontRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref DomainName
+      Type: A
+      HostedZoneId: !Ref HostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: Z2FDTNDATAQYW2

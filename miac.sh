@@ -30,6 +30,7 @@ AWSSECRETPASSWORD="YOUGOTTAFIXTHIS"
 AWSREGIONID="us-east-1"
 AWSOUTPUT="json"
 AWS="/usr/local/bin/aws"
+TERRAFORM="/usr/local/bin/terraform"
 YOURNAME="FILLMEIN" # Fill in your company or project name for use with the bucket var.
 GENERICUUID=`uuidgen`
 BUCKET="$GENERICUUID-Generic" # OR Fill in your very own bucket name, just recognize it has to be globally unique for Amazon's S3.
@@ -313,6 +314,8 @@ ${AWS} sync ${REPODIR} s3://${BUCKET} --exclude '*.git/*' --exclude '.DS_Store' 
 ${AWS} cloudfront create-distribution --origin-domain-name ${DOMAIN}
 
 ## Configure the CloudFront Distribution
+
+${AUTOPKG} run Terraform.install
 
 ## This is the part I can't figure out. Creating the cloudfront distro works! But I haven't figure out how to generate the JSON I need in a ways that makes sense to script. Halp.
 

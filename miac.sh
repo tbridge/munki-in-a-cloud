@@ -305,6 +305,8 @@ echo "cloudfront = true" >> ~/.aws/config
 
 ## Create the S3 bucket
 
+## This is going to be deprecated shortly by terraform-munki
+
 ${AWS} s3api create-bucket --acl private --bucket ${BUCKET} --region ${AWSREGIONID}
 
 ## Sync to the S3 bucket

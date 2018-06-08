@@ -14,7 +14,7 @@ LOGGER="/usr/bin/logger -t Munki-in-a-Cloud"
 MUNKILOC="/usr/local/munki"
 GIT="/usr/bin/git"
 MANU="/usr/local/munki/manifestutil"
-TEXTEDITOR="TextWrangler.app"
+TEXTEDITOR="BBEdit.app"
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 AUTOPKGRUN="AdobeFlashPlayer.munki Dropbox.munki Firefox.munki GoogleChrome.munki BBEdit.munki munkitools3.munki MakeCatalogs.munki"
 AUTOPKGARRAY=($AUTOPKGRUN)
@@ -124,7 +124,9 @@ if
 
 # Write a Choices XML file for the Munki package. We are installing the tools, but not the launchd nor the Managed Software Center App. Thanks Rich and Greg for the language!
 
-     /bin/cat > "/tmp/com.github.munki-in-a-box.munkiinstall.xml" << 'MUNKICHOICESDONE'
+
+/bin/cat > "/tmp/com.github.munki-in-a-box.munkiinstall.xml" << 'MUNKICHOICESDONE'
+
      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
@@ -164,7 +166,7 @@ if
 </plist>
 MUNKICHOICESDONE
 
-    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.munki-in-a-box.munkiinstall.xml" -pkg "munki-latest1.pkg" -target "/"
+sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.munki-in-a-box.munkiinstall.xml" -pkg "munki-latest1.pkg" -target "/"
 
     ${LOGGER} "Installed Munki Admin and Munki Core packages"
     echo "Installed Munki packages"
@@ -314,6 +316,6 @@ ${AWS} cloudfront create-distribution --origin-domain-name ${DOMAIN}
 
 ## Configure the CloudFront Distribution
 
-## This is the part I can't figure out. Creating the cloudfront distro works! But I haven't figure out how to generate the JSON I need in a ways that makes sense to script. Halp.
+## This is where we're gonna tie into Clayton's new project.
 
 ## Get a beer and go to the pub.

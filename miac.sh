@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 
 ## This script is designed to setup a Munki repository on a local machine for sync to the cloud.
 
@@ -305,26 +305,10 @@ echo "cloudfront = true" >> ~/.aws/config
 
 ## Create the S3 bucket
 
-## This is going to be deprecated shortly by terraform-munki
-
 ${AWS} s3api create-bucket --acl private --bucket ${BUCKET} --region ${AWSREGIONID}
 
 ## Sync to the S3 bucket
 
 ${AWS} sync ${REPODIR} s3://${BUCKET} --exclude '*.git/*' --exclude '.DS_Store' --delete
-
-## Create the CloudFront Distribution of the S3 bucket
-
-${AWS} cloudfront create-distribution --origin-domain-name ${DOMAIN}
-
-## Configure the CloudFront Distribution
-
-<<<<<<< HEAD
-## This is where we're gonna tie into Clayton's new project.
-=======
-${AUTOPKG} run Terraform.install
-
-## This is the part I can't figure out. Creating the cloudfront distro works! But I haven't figure out how to generate the JSON I need in a ways that makes sense to script. Halp.
->>>>>>> origin/master
 
 ## Get a beer and go to the pub.

@@ -3,7 +3,7 @@ munki-in-a-cloud
 
 The goal of this script is to setup a basic munki repo with a simple script based on a set of common variables. I have placed defaults in these variables, but they are easily overridden and you should decide what they are.
 
-This script is based upon Munki-in-a-Box, the Demonstration Setup Guide for Munki, AutoPKG, and other sources. My sincerest thanks to The Mac Admins Community for being supportive and awesome.
+This script is based upon [Munki-in-a-Box](https://github.com/tbridge/munki-in-a-box), the Demonstration Setup Guide for Munki, AutoPKG, and other sources. My sincerest thanks to The Mac Admins Community for being supportive and awesome.
 
 ### Pre-Requisites:
 
@@ -52,6 +52,5 @@ The [Amazon Web Services Command Line Interface](https://docs.aws.amazon.com/cli
 **New in 0.1**
 
 Everything old is new again!
-
 
 Questions? Comments? Suggestions? Jeers? Please email me at tom@technolutionary.com

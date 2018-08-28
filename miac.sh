@@ -66,7 +66,7 @@ trap 'fn_terminate' SIGINT
 
 if
     [[ $EUID -eq 0 ]]; then
-   $echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+   echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
     exit 4 # Running as root.
 fi
 

@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 ## This script is designed to setup a Munki repository on a local machine for sync to the cloud.
 

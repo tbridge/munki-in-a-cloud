@@ -32,7 +32,7 @@ AWSOUTPUT="json"
 AWS="/usr/local/bin/aws"
 TERRAFORM="/usr/local/bin/terraform"
 YOURNAME="FILLMEIN" # Fill in your company or project name for use with the bucket var.
-GENERICUUID=`uuidgen`
+GENERICUUID=$(uuidgen)
 BUCKET="$GENERICUUID-Generic" # OR Fill in your very own bucket name, just recognize it has to be globally unique for Amazon's S3.
 DOMAIN="your.domainname.tld" # This should be one you can actually control...
 
@@ -45,7 +45,7 @@ echo "First up: Are you an admin user? Enter your password below:"
 sudo whoami > /tmp/quickytest
 
 if
-	[[  `cat /tmp/quickytest` == "root" ]]; then
+	[[  $(cat /tmp/quickytest) == "root" ]]; then
 	${LOGGER} "Privilege Escalation Allowed, Please Continue."
 	else
 	${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."

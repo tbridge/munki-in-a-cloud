@@ -240,11 +240,11 @@ echo "$aLen" "overrides to create"
 for (( j=0; j<aLen; j++));
 do
     ${LOGGER} "Adding ${AUTOPKGARRAY[$j]} override"
-    ${AUTOPKG} make-override ${AUTOPKGARRAY[$j]} 
+    ${AUTOPKG} make-override "${AUTOPKGARRAY[$j]}"
     ${LOGGER} "Added ${AUTOPKGARRAY[$j]} override"
 done
 
-${AUTOPKG} run -v ${AUTOPKGRUN}
+${AUTOPKG} run -v "${AUTOPKGRUN}"
 
 ${LOGGER} "AutoPkg Run"
 echo "AutoPkg has run"
@@ -305,10 +305,10 @@ echo "cloudfront = true" >> ~/.aws/config
 
 ## Create the S3 bucket
 
-${AWS} s3api create-bucket --acl private --bucket ${BUCKET} --region ${AWSREGIONID}
+${AWS} s3api create-bucket --acl private --bucket "${BUCKET}" --region ${AWSREGIONID}
 
 ## Sync to the S3 bucket
 
-${AWS} sync ${REPODIR} s3://${BUCKET} --exclude '*.git/*' --exclude '.DS_Store' --delete
+${AWS} sync ${REPODIR} s3://"${BUCKET}" --exclude '*.git/*' --exclude '.DS_Store' --delete
 
 ## Get a beer and go to the pub.

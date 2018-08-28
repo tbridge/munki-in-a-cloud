@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 ## This script is designed to setup a Munki repository on a local machine for sync to the cloud.
 
@@ -32,7 +32,7 @@ AWSOUTPUT="json"
 AWS="/usr/local/bin/aws"
 TERRAFORM="/usr/local/bin/terraform"
 YOURNAME="FILLMEIN" # Fill in your company or project name for use with the bucket var.
-GENERICUUID=`uuidgen`
+GENERICUUID=$(uuidgen)
 BUCKET="$GENERICUUID-Generic" # OR Fill in your very own bucket name, just recognize it has to be globally unique for Amazon's S3.
 DOMAIN="your.domainname.tld" # This should be one you can actually control...
 
@@ -45,7 +45,7 @@ echo "First up: Are you an admin user? Enter your password below:"
 sudo whoami > /tmp/quickytest
 
 if
-	[[  `cat /tmp/quickytest` == "root" ]]; then
+	[[  $(cat /tmp/quickytest) == "root" ]]; then
 	${LOGGER} "Privilege Escalation Allowed, Please Continue."
 	else
 	${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."
@@ -66,7 +66,7 @@ trap 'fn_terminate' SIGINT
 
 if
     [[ $EUID -eq 0 ]]; then
-   $echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+   echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
     exit 4 # Running as root.
 fi
 
@@ -240,11 +240,11 @@ echo "$aLen" "overrides to create"
 for (( j=0; j<aLen; j++));
 do
     ${LOGGER} "Adding ${AUTOPKGARRAY[$j]} override"
-    ${AUTOPKG} make-override ${AUTOPKGARRAY[$j]} 
+    ${AUTOPKG} make-override "${AUTOPKGARRAY[$j]}"
     ${LOGGER} "Added ${AUTOPKGARRAY[$j]} override"
 done
 
-${AUTOPKG} run -v ${AUTOPKGRUN}
+${AUTOPKG} run -v "${AUTOPKGRUN}"
 
 ${LOGGER} "AutoPkg Run"
 echo "AutoPkg has run"
@@ -305,10 +305,10 @@ echo "cloudfront = true" >> ~/.aws/config
 
 ## Create the S3 bucket
 
-${AWS} s3api create-bucket --acl private --bucket ${BUCKET} --region ${AWSREGIONID}
+${AWS} s3api create-bucket --acl private --bucket "${BUCKET}" --region ${AWSREGIONID}
 
 ## Sync to the S3 bucket
 
-${AWS} sync ${REPODIR} s3://${BUCKET} --exclude '*.git/*' --exclude '.DS_Store' --delete
+${AWS} sync ${REPODIR} s3://"${BUCKET}" --exclude '*.git/*' --exclude '.DS_Store' --delete
 
 ## Get a beer and go to the pub.

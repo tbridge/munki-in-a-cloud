@@ -3,7 +3,7 @@
 ## This script is designed to setup a Munki repository on a local machine for sync to the cloud.
 
 ## Goals:
-## This script should:
+## This script should do the following:
 
 # 1. Install git if needed.
 # 2. Install the Python pip installer tool if needed.

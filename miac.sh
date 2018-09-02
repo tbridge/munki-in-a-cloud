@@ -5,40 +5,105 @@
 ## Goals:
 ## This script should:
 
+# 1. Install git if needed.
+# 2. Install the Python pip installer tool if needed.
+# 3. Install the PyOpen SSL module if needed.
+# 4. Install AutoPkg if needed.
+# 5. Install Munki if needed.
+# 6. Install the awscli tool if needed.
+# 7. Set up a Munki repo and set the logged-in user as the owner.
+# 8. Add specified AutoPkg repos.
+# 9. Run specified AutoPkg recipes to populate the Munki repo.
+# 10. Install AutoPkgr.
+# 11. Install Munki Admin.
+# 12. Configure AutoPkgr's recipe list.
+# 13. Set up default manifest using the packages added to the Munki repo.
+# 14. Set up new bucket in AWS's S3 service.
+# 15. Synchronize Munki repo with S3 bucket.
+
 ## Declare some useful variables:
 
-AUTOPKG_LOCATION="/usr/local/bin/autopkg"
-DEFAULTS_LOCATION="/usr/bin/defaults"
-PIP_LOCATION="/usr/local/bin/pip"
-PLISTBUDDY_LOCATION="/usr/libexec/PlistBuddy"
-USERHOME="$HOME"
-REPOLOC="/Users/Shared/"
+# Variables you'll need to configure the Munki repo.
+# It should be OK to use the default values below if
+# you're setting up Munki for the first time on macOS.
+
+REPOLOC="/Users/Shared"
 REPONAME="munki_repo"
+TEXTEDITOR="BBEdit.app"
+
+# Variables you'll need to edit to create the S3 bucket.
+
+AWSSECRETKEY="YOUGOTTAFIXTHIS"
+AWSSECRETPASSWORD="YOUGOTTAFIXTHIS"
+AWSREGIONID="YOUGOTTAFIXTHIS"
+AWSOUTPUT="json" # Default output format can be either json, text, or table. json is a safe default to use.
+
+# If desired, set a name for the S3 bucket. Bucket names must be unique and can contain lowercase letters, numbers, and hyphens.
+# If you don't set a name here, the script will assign the bucket a name similar to the one shown below:
+#
+# 68528a32-1c3f-49f9-aec7-3bd57efe6579-miac
+
+YOURBUCKETNAME=""
+
+# Variables you'll need to set for AutoPkg.
+
+## AutoPkg repos:
+#
+# Enter the list of AutoPkg repos which need to be set up.
+#
+# All listed recipe repos should go between the two ENDMSG lines. 
+# The list should look similar to the one shown below:
+#
+# read -r -d '' AUTOPKG_REPOS <<ENDMSG
+# recipes
+# rtrouton-recipes
+# jleggat-recipes
+# timsutton-recipes
+# nmcspadden-recipes
+# jessepeterson-recipes
+# ENDMSG
+#
+# It should be OK to use the default values below if
+# you're setting up Munki for the first time on macOS.
+
+read -r -d '' AUTOPKG_REPOS <<ENDMSG
+recipes
+rtrouton-recipes
+jleggat-recipes
+timsutton-recipes
+nmcspadden-recipes
+jessepeterson-recipes
+ENDMSG
+
+# Set the list of AutoPkg recipes you want to run.
+# It should be OK to use the default values below if
+# you're setting up Munki for the first time on macOS.
+
+AUTOPKGRUN="AdobeFlashPlayer.munki Dropbox.munki Firefox.munki GoogleChrome.munki BBEdit.munki munkitools3.munki MakeCatalogs.munki"
+
+# The variables below this line don't need to be changed.
+
+AUTOPKG_LOCATION="/usr/local/bin/autopkg"
+PIP_LOCATION="/usr/local/bin/pip"
+USERHOME="$HOME"
 REPODIR="${REPOLOC}/${REPONAME}"
 LOGGER="/usr/bin/logger -t Munki-in-a-Cloud"
 MUNKILOC="/usr/local/munki"
+MUNKIMAKECATALOGS="/usr/local/munki/makecatalogs"
 MANU="/usr/local/munki/manifestutil"
-TEXTEDITOR="BBEdit.app"
-osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
-AUTOPKGRUN="AdobeFlashPlayer.munki Dropbox.munki Firefox.munki GoogleChrome.munki BBEdit.munki munkitools3.munki MakeCatalogs.munki"
 AUTOPKGARRAY=($AUTOPKGRUN)
 DEFAULTS="/usr/bin/defaults"
 AUTOPKG="/usr/local/bin/autopkg"
-MAINPREFSDIR="/Library/Preferences"
 ADMINUSERNAME=$(id -nu)
-SCRIPTDIR="/usr/local/bin"
-HTPASSWD="YouNeedToChangeThis"
-HOSTNAME="your.domain.com"
-AWSSECRETKEY="YOUGOTTAFIXTHIS"
-AWSSECRETPASSWORD="YOUGOTTAFIXTHIS"
-AWSREGIONID="us-east-1"
-AWSOUTPUT="json"
 AWS="/usr/local/bin/aws"
-TERRAFORM="/usr/local/bin/terraform"
-YOURNAME="FILLMEIN" # Fill in your company or project name for use with the bucket var.
 GENERICUUID=$(uuidgen | tr '[A-Z]' '[a-z]') # UUID converted to use lower-case letters in place of upper-case.
-BUCKET="$GENERICUUID-miac" # OR Fill in your very own bucket name. Bucket names must be unique and can contain lowercase letters, numbers, and hyphens.
-DOMAIN="your.domainname.tld" # This should be one you can actually control...
+
+if [[ -n "$YOURBUCKETNAME" ]]; then
+   BUCKET="$YOURBUCKETNAME"
+else
+   BUCKET="$GENERICUUID-miac"
+fi
+   
 
 ## Functions used in the script
 
@@ -77,12 +142,12 @@ installCommandLineTools() {
 
     echo "### Installing git via installing the Xcode command line tools..."
     echo
-    osx_vers=$(sw_vers -productVersion | awk -F "." '{print $2}')
+    os_vers=$(/usr/bin/sw_vers -productVersion | awk -F "." '{print $2}')
     cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
 
     # Installing the latest Xcode command line tools on 10.10.x or later.
 
-    if [[ "$osx_vers" -ge 10 ]]; then
+    if [[ "$os_vers" -ge 10 ]]; then
     
     	# Create the placeholder file which is checked by the softwareupdate tool 
     	# before allowing the installation of the Xcode command line tools.
@@ -91,7 +156,7 @@ installCommandLineTools() {
     	
     	# Identify the correct update in the Software Update feed with "Command Line Tools" in the name for the OS version in question.
     	
-    	cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "$osx_vers" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
+    	cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "$os_vers" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
     	
     	# Check to see if the softwareupdate tool has returned more than one Xcode
     	# command line tool installation option. If it has, use the last one listed
@@ -131,9 +196,9 @@ installAutoPkg() {
     rm "$USERHOME/autopkg-latest.pkg"
 
     ${LOGGER} "AutoPkg Installed"
-    echo
+    echo ""
     echo "### AutoPkg Installed"
-    echo
+    echo ""
 }
 
 installMunkiTools() {
@@ -150,7 +215,7 @@ installMunkiTools() {
 
     /bin/cat > "/tmp/com.github.munki-in-a-box.munkiinstall.xml" << 'MUNKICHOICESDONE'
 
-     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
         <dict>
@@ -259,7 +324,7 @@ rootCheck
 
 adminCheck
 
-echo "Great! The $(id -nu) account is an admin account."
+echo "Great! The $ADMINUSERNAME account is an admin account."
 echo "Any follow-up password requests will be for sudo rights."
 
 ${LOGGER} "Starting up Munki in a Cloud..."
@@ -325,6 +390,15 @@ else
     echo "### Pip Installed"
 fi
 
+# Check for Python cryptography module and install if needed.
+
+if [[ $(pip list | awk '/cryptography/ {print $1}') = "" ]]; then
+    installPythonCryptographyModule
+else
+    ${LOGGER} "Python cryptography module installed"
+    echo "### PyOpenSSL Installed"
+fi
+
 # Get AutoPkg if not already installed
 if [[ ! -x ${AUTOPKG_LOCATION} ]]; then
     installAutoPkg "${userhome}"
@@ -339,16 +413,6 @@ else
     echo "### AutoPkg Installed"
 fi
 
-# Check for Python cryptography module and install if needed.
-
-if [[ $(pip list | awk '/cryptography/ {print $1}') = "" ]]; then
-    installPythonCryptographyModule
-else
-    ${LOGGER} "Python cryptography module installed"
-    echo "### PyOpenSSL Installed"
-fi
-
-
 ## Check for Munki Tools and install if needed.
 
 if [[ ! -x "$MUNKILOC/munkiimport" ]]; then
@@ -361,11 +425,11 @@ fi
 
 ## Build a local repository
 
-mkdir -p "$REPODIR/catalogs"
-mkdir -p "$REPODIR/manifests"
-mkdir -p "$REPODIR/pkgs"
-mkdir -p "$REPODIR/pkgsinfo"
-mkdir -p "$REPODIR/icons"
+/bin/mkdir -p "$REPODIR/catalogs"
+/bin/mkdir -p "$REPODIR/manifests"
+/bin/mkdir -p "$REPODIR/pkgs"
+/bin/mkdir -p "$REPODIR/pkgsinfo"
+/bin/mkdir -p "$REPODIR/icons"
 
 # When later syncing to S3, empty folders will not be synced because
 # S3 doesn't have a filesystem concept of directories. To avoid the
@@ -380,7 +444,7 @@ touch "$REPODIR/icons/.miac"
 
 # Make sure the logged-in user owns the Munki repo directory.
 
-chmod -R a+rX,g+w "$REPODIR"
+chmod -R "$ADMINUSERNAME" a+rX,g+w "$REPODIR"
 
 ## Install autopkg 
 
@@ -393,12 +457,13 @@ installAutoPkg
 
 ${DEFAULTS} write com.github.autopkg MUNKI_REPO "$REPODIR"
 
-${AUTOPKG} repo-add recipes
-${AUTOPKG} repo-add rtrouton-recipes
-${AUTOPKG} repo-add jleggat-recipes
-${AUTOPKG} repo-add timsutton-recipes
-${AUTOPKG} repo-add nmcspadden-recipes
-${AUTOPKG} repo-add jessepeterson-recipes
+# Add AutoPkg repos (checks if already added)
+
+${AUTOPKG} repo-add ${AUTOPKG_REPOS}
+
+# Update AutoPkg repos (if the repos were already there no update would otherwise happen)
+
+${AUTOPKG} repo-update ${AUTOPKG_REPOS}
 
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${REPODIR}"
@@ -445,13 +510,43 @@ echo "AutoPkgr Installed"
 
 # Create AutoPkgr recipe list
 
-mkdir "$USERHOME/Library/Application Support/AutoPkgr"
+/bin/mkdir "$USERHOME/Library/Application Support/AutoPkgr"
 
 # Add all recipes to AutoPkgr's list of recipes
 
-ls -A "$USERHOME/Library/AutoPkg/Cache" | grep -v plist | grep -v MakeCatalogs | grep -v AutoPkgr > "$USERHOME/Library/Application Support/AutoPkgr/recipe_list.txt"
-ls -A "$USERHOME/Library/AutoPkg/Cache" | grep MakeCatalogs >> "$USERHOME/Library/Application Support/AutoPkgr/recipe_list.txt"
+/bin/ls -A "$USERHOME/Library/AutoPkg/Cache" | grep -v plist | grep -v MakeCatalogs | grep -v AutoPkgr > "$USERHOME/Library/Application Support/AutoPkgr/recipe_list.txt"
+/bin/ls -A "$USERHOME/Library/AutoPkg/Cache" | grep MakeCatalogs >> "$USERHOME/Library/Application Support/AutoPkgr/recipe_list.txt"
 
+####
+# Make Munki catalogs
+####
+
+"$MUNKIMAKECATALOGS" "$REPODIR"
+
+####
+# Create new site_default manifest and add imported packages to it
+####
+
+${MANU} new-manifest site_default
+echo "Site_Default created"
+${MANU} add-catalog testing --manifest site_default
+echo "Testing Catalog added to Site_Default"
+
+listofpkgs=($(${MANU} list-catalog-items testing))
+echo "List of Packages for adding to repo:" ${listofpkgs[*]}
+
+# Thanks Rich! Code for Array Processing borrowed from First Boot Packager
+# Original at https://github.com/rtrouton/rtrouton_scripts/tree/master/rtrouton_scripts/first_boot_package_install/scripts
+
+tLen=${#listofpkgs[@]}
+echo "$tLen" " packages to add to manifest"
+
+for (( i=0; i<tLen; i++));
+do
+    ${LOGGER} "Adding ${listofpkgs[$i]} to site_default"
+    ${MANU} add-pkg ${listofpkgs[$i]} --manifest site_default
+    ${LOGGER} "Added ${listofpkgs[$i]} to site_default"
+done
 
 ####
 # Install Munki Admin App by the amazing Hannes Juutilainen
@@ -474,7 +569,7 @@ fi
 
 ## First we have to add credentials to a specific file.
 
-mkdir ~/.aws
+/bin/mkdir ~/.aws
 
 echo "[default]" > ~/.aws/credentials
 echo "aws_access_key_id = $AWSSECRETKEY" >> ~/.aws/credentials
@@ -487,14 +582,22 @@ echo "cloudfront = true" >> ~/.aws/config
 
 ## Create the S3 bucket
 
+${LOGGER} "Creating S3 bucket"
 echo "Creating S3 bucket named $BUCKET in $AWSREGIONID"
 
 "$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID"
 
 ## Sync to the S3 bucket
 
+${LOGGER} "Synchronizing S3 bucket"
 echo "Synching $REPODIR with S3 bucket named $BUCKET in $AWSREGIONID"
 
 "$AWS" s3 sync "$REPODIR" s3://"$BUCKET" --exclude '*.git/*' --exclude '.DS_Store' --delete
+
+${LOGGER} "Munki in a Cloud run completed."
+echo ""
+echo "Munki in a Cloud has finished running."
+echo "May your Munki repo be full, the S3 bucket provisioned, and your heart be glad."
+echo ""
 
 ## Get a beer and go to the pub.

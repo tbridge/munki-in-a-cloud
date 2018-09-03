@@ -572,13 +572,13 @@ fi
 
 ## First we have to add credentials to a specific file.
 
-/bin/mkdir ~/.aws
+/bin/mkdir -p ~/.aws
 
-echo "[default]" > ~/.aws/credentials
+echo "[munki-in-a-cloud]" > ~/.aws/credentials
 echo "aws_access_key_id = $AWSSECRETKEY" >> ~/.aws/credentials
 echo "aws_secret_access_key = $AWSSECRETPASSWORD" >> ~/.aws/credentials
 
-echo "[default]" > ~/.aws/config
+echo "[munki-in-a-cloud]" > ~/.aws/config
 echo "region = $AWSREGIONID" >> ~/.aws/config
 echo "[preview]" >> ~/.aws/config
 echo "cloudfront = true" >> ~/.aws/config
@@ -588,14 +588,14 @@ echo "cloudfront = true" >> ~/.aws/config
 ${LOGGER} "Creating S3 bucket"
 echo "Creating S3 bucket named $BUCKET in $AWSREGIONID"
 
-"$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID"
+"$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID" --profile munki-in-a-cloud
 
 ## Sync to the S3 bucket
 
 ${LOGGER} "Synchronizing S3 bucket"
 echo "Synching $REPODIR with S3 bucket named $BUCKET in $AWSREGIONID"
 
-"$AWS" s3 sync "$REPODIR" s3://"$BUCKET" --exclude '*.git/*' --exclude '.DS_Store' --delete
+"$AWS" s3 sync "$REPODIR" s3://"$BUCKET" --exclude '*.git/*' --exclude '.DS_Store' --delete --profile munki-in-a-cloud
 
 ${LOGGER} "Munki in a Cloud run completed."
 echo ""

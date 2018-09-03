@@ -15,8 +15,8 @@ This script is based upon [Munki-in-a-Box](https://github.com/tbridge/munki-in-a
 
 As if this were a swarm of bees, unless you have some experience with Munki and AWS, this script may be dangerous. And, unlike Munki-in-a-Box, this script could **cost you a substantial amount in storage fees**, so use it carefully and deliberately. This script carries no warranty or guarantee, and it is entirely possible that Very Bad Things could happen by accident.
 
-1) Check variables in Lines 10-39
-2) Double-check that you have the right credentials in Lines 31-34
+1) Check variables in Lines 32-86
+2) Double-check that you have the right credentials in Lines 40-43
 3) ./miac.sh
 
 If you do not make changes to the script before running it, the script may not run as intended. *Please double-check to make sure that you are comfortable with the variables' values.*
@@ -48,6 +48,10 @@ When you setup AutoPkgr, be sure to understand the security implications of givi
 The [Amazon Web Services Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) has a lot of useful tools for manipulating your AWS environment from the command line. I'm choosing to install it with `pip`, and installing `pip` if it is not already installed. You can alter that section if you want to use another package manager.
 
 ### Changelog
+
+**New in 1.0**
+
+Major changes in the structure of this script arrive thanks to the inimitable Rich Trouton, who changes out some of manual code for proper functions, as well as modernization to several of the methods.
 
 **New in 0.1**
 

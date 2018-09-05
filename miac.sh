@@ -496,7 +496,7 @@ for (( j=0; j<aLen; j++));
 do
     ${LOGGER} "Adding ${AUTOPKGARRAY[$j]} override"
     ${AUTOPKG} make-override "${AUTOPKGARRAY[$j]}"
-    ${AUTOPKG} add-trust-info "${AUTOPKGARRAY[$j]}"
+    ${AUTOPKG} update-trust-info "${AUTOPKGARRAY[$j]}"
     ${LOGGER} "Added ${AUTOPKGARRAY[$j]} override"
     ${LOGGER} "Running ${AUTOPKGARRAY[$j]} recipe"
     ${AUTOPKG} run "${AUTOPKGARRAY[$j]}"

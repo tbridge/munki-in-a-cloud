@@ -39,6 +39,10 @@ TEXTEDITOR="BBEdit.app"
 
 AWSSECRETKEY="YOUGOTTAFIXTHIS"
 AWSSECRETPASSWORD="YOUGOTTAFIXTHIS"
+# AWS region according to https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
+# all lower case
+# example:
+# AWSREGIONID="us-east-1"
 AWSREGIONID="YOUGOTTAFIXTHIS"
 AWSOUTPUT="json" # Default output format can be either json, text, or table. json is a safe default to use.
 
@@ -492,7 +496,7 @@ for (( j=0; j<aLen; j++));
 do
     ${LOGGER} "Adding ${AUTOPKGARRAY[$j]} override"
     ${AUTOPKG} make-override "${AUTOPKGARRAY[$j]}"
-    ${AUTOPKG} add-trust-info "${AUTOPKGARRAY[$j]}"
+    ${AUTOPKG} update-trust-info "${AUTOPKGARRAY[$j]}"
     ${LOGGER} "Added ${AUTOPKGARRAY[$j]} override"
     ${LOGGER} "Running ${AUTOPKGARRAY[$j]} recipe"
     ${AUTOPKG} run "${AUTOPKGARRAY[$j]}"
@@ -588,7 +592,12 @@ echo "cloudfront = true" >> ~/.aws/config
 ${LOGGER} "Creating S3 bucket"
 echo "Creating S3 bucket named $BUCKET in $AWSREGIONID"
 
-"$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID" --profile munki-in-a-cloud
+# evaluate the region first and add options accordingly
+if [[ "$AWSREGIONID" = "us-east-1" ]]; then
+   "$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID" --profile munki-in-a-cloud
+   else
+   "$AWS" s3api create-bucket --acl private --bucket "$BUCKET" --region "$AWSREGIONID" --create-bucket-configuration LocationConstraint="$AWSREGIONID" --profile munki-in-a-cloud
+fi
 
 ## Sync to the S3 bucket
 

@@ -36,6 +36,9 @@ REPONAME="munki_repo"
 TEXTEDITOR="BBEdit.app"
 
 # Variables you'll need to edit to create the S3 bucket.
+# What these variables correspond to for your AWS programmatic user
+# AWSSECRETKEY = Access Key
+# AWSSECRETPASSWORD = Secret Access Key
 
 AWSSECRETKEY="YOUGOTTAFIXTHIS"
 AWSSECRETPASSWORD="YOUGOTTAFIXTHIS"

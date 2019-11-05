@@ -165,7 +165,11 @@ installCommandLineTools() {
     	
     	# Identify the correct update in the Software Update feed with "Command Line Tools" in the name for the OS version in question.
     	
-    	cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "$os_vers" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
+    	if [[ "$os_vers" -ge 15 ]]; then
+    	   cmd_line_tools=$(softwareupdate -l | awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-)	
+    	elif [[ "$os_vers" -ge 10 ]] && [[ "$os_vers" -lt 14 ]]; then
+    	   cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "$os_vers" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
+    	fi
     	
     	# Check to see if the softwareupdate tool has returned more than one Xcode
     	# command line tool installation option. If it has, use the last one listed
